@@ -1,0 +1,77 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://duon.ai/schemas/verify-contract.v1.json",
+  "title": "VerifyContract",
+  "description": "Specification for comparing existing system structured records against document ground truth.",
+  "type": "object",
+  "required": ["status", "fields", "meta"],
+  "properties": {
+    "status": {
+      "type": "string",
+      "enum": ["matched", "conflict", "partial_match"],
+      "description": "Overall verification outcome."
+    },
+    "summary": {
+      "type": "object",
+      "required": ["total_checked", "matched_count", "conflict_count", "missing_count"],
+      "properties": {
+        "total_checked": { "type": "integer" },
+        "matched_count": { "type": "integer" },
+        "conflict_count": { "type": "integer" },
+        "missing_count": { "type": "integer" }
+      }
+    },
+    "fields": {
+      "type": "object",
+      "description": "Per-field verification result keyed by field path.",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["status"],
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": ["matched", "conflict", "missing_in_doc", "unverified"]
+          },
+          "system_value": {
+            "description": "Value supplied from caller's database/system."
+          },
+          "document_value": {
+            "description": "Value discovered from the document."
+          },
+          "diff_reason": {
+            "type": "string",
+            "description": "Explanation of discrepancy if conflict."
+          },
+          "evidence": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["page", "quote", "item_ids", "bbox"],
+              "properties": {
+                "page": { "type": "integer" },
+                "quote": { "type": "string" },
+                "item_ids": { "type": "array", "items": { "type": "string" } },
+                "bbox": {
+                  "type": "array",
+                  "minItems": 4,
+                  "maxItems": 4,
+                  "items": { "type": "number" }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "meta": {
+      "type": "object",
+      "required": ["document_sha256", "result_hash"],
+      "properties": {
+        "document_sha256": { "type": "string" },
+        "result_hash": { "type": "string" },
+        "model": { "type": "string" },
+        "execution_time_ms": { "type": "integer" }
+      }
+    }
+  }
+}

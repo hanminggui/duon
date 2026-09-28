@@ -1,0 +1,70 @@
+{
+  "status": "conflict",
+  "summary": {
+    "total_checked": 4,
+    "matched_count": 3,
+    "conflict_count": 1,
+    "missing_count": 0
+  },
+  "fields": {
+    "/party_a": {
+      "status": "matched",
+      "system_value": "吾立方公司",
+      "document_value": "吾立方公司",
+      "evidence": [
+        {
+          "page": 1,
+          "item_ids": ["p1_i0004"],
+          "quote": "吾立方公司",
+          "bbox": [112.00, 180.00, 185.00, 192.00]
+        }
+      ]
+    },
+    "/party_b": {
+      "status": "matched",
+      "system_value": "宋泽昊",
+      "document_value": "宋泽昊",
+      "evidence": [
+        {
+          "page": 1,
+          "item_ids": ["p1_i0006"],
+          "quote": "宋泽昊",
+          "bbox": [102.00, 210.00, 145.00, 222.00]
+        }
+      ]
+    },
+    "/order_date": {
+      "status": "matched",
+      "system_value": "2026-05-18",
+      "document_value": "2026-05-18",
+      "evidence": [
+        {
+          "page": 1,
+          "item_ids": ["p1_i0007"],
+          "quote": "下单时间：2026年05月18日",
+          "bbox": [50.00, 240.00, 210.00, 252.00]
+        }
+      ]
+    },
+    "/amount": {
+      "status": "conflict",
+      "system_value": 1500,
+      "document_value": 1600,
+      "diff_reason": "Numeric discrepancy: system recorded 1500, but document states 1600.",
+      "evidence": [
+        {
+          "page": 1,
+          "item_ids": ["p1_i0008"],
+          "quote": "费用价格：总金额为人民币 1600 元 税前。",
+          "bbox": [50.00, 270.00, 290.00, 282.50]
+        }
+      ]
+    }
+  },
+  "meta": {
+    "document_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "result_hash": "3d9c81729bfa5f6170d9a6572e8c2bb91f26e64906168e3b4a2bf4f4839cf9b3",
+    "model": "Qwen3-8B",
+    "execution_time_ms": 860
+  }
+}

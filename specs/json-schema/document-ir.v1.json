@@ -1,0 +1,275 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://duon.ai/schemas/document-ir.v1.json",
+  "title": "DocumentIR",
+  "description": "Duon Canonical Document Intermediate Representation v1. Normalized from parser outputs (e.g. LiteParse) with stable IDs and top-left coordinates.",
+  "type": "object",
+  "required": [
+    "document_id",
+    "source",
+    "parser",
+    "pages"
+  ],
+  "properties": {
+    "document_id": {
+      "type": "string",
+      "description": "Unique identifier for this document instance or content hash."
+    },
+    "source": {
+      "type": "object",
+      "required": ["sha256", "mime_type"],
+      "properties": {
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$",
+          "description": "SHA-256 hash of the original document bytes."
+        },
+        "mime_type": {
+          "type": "string",
+          "description": "MIME type, e.g. application/pdf, image/png."
+        },
+        "filename": {
+          "type": "string",
+          "description": "Original file name if available."
+        },
+        "size_bytes": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Original file size in bytes."
+        }
+      }
+    },
+    "parser": {
+      "type": "object",
+      "required": ["name", "version", "config_hash"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Name of the parser backend, e.g. liteparse."
+        },
+        "version": {
+          "type": "string",
+          "description": "Version of the parser library."
+        },
+        "config_hash": {
+          "type": "string",
+          "description": "Hash of parser configuration flags (OCR mode, DPI, etc.)."
+        }
+      }
+    },
+    "pages": {
+      "type": "array",
+      "description": "Sequential pages of the document.",
+      "items": {
+        "$ref": "#/$defs/Page"
+      }
+    }
+  },
+  "$defs": {
+    "BBox": {
+      "type": "array",
+      "description": "Bounding box: [x0, y0, x1, y1]. Origin is at Top-Left. x0 <= x1 and y0 <= y1.",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {
+        "type": "number",
+        "minimum": 0
+      }
+    },
+    "TextItem": {
+      "type": "object",
+      "required": ["id", "type", "text", "bbox"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^p[0-9]+_i[0-9]+$",
+          "description": "Deterministic, stable item ID unique across document, e.g. p1_i0001."
+        },
+        "type": {
+          "type": "string",
+          "enum": ["text"]
+        },
+        "text": {
+          "type": "string",
+          "description": "Extracted text content."
+        },
+        "bbox": {
+          "$ref": "#/$defs/BBox"
+        },
+        "confidence": {
+          "type": "number",
+          "minimum": 0.0,
+          "maximum": 1.0,
+          "description": "OCR or parser extraction confidence score (0.0 to 1.0)."
+        }
+      }
+    },
+    "Block": {
+      "type": "object",
+      "required": ["id", "type", "text", "bbox", "item_ids"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^p[0-9]+_b[0-9]+$",
+          "description": "Deterministic block ID, e.g. p1_b0001."
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "heading",
+            "paragraph",
+            "list",
+            "table",
+            "figure",
+            "header",
+            "footer",
+            "footnote",
+            "other"
+          ]
+        },
+        "text": {
+          "type": "string",
+          "description": "Combined text of this layout block."
+        },
+        "bbox": {
+          "$ref": "#/$defs/BBox"
+        },
+        "item_ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "References to underlying TextItem IDs forming this block in reading order."
+        }
+      }
+    },
+    "TableCell": {
+      "type": "object",
+      "required": ["row_index", "col_index", "text", "bbox"],
+      "properties": {
+        "row_index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "col_index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "row_span": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 1
+        },
+        "col_span": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 1
+        },
+        "text": {
+          "type": "string"
+        },
+        "bbox": {
+          "$ref": "#/$defs/BBox"
+        },
+        "item_ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "Table": {
+      "type": "object",
+      "required": ["id", "bbox", "rows", "cols", "cells"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^p[0-9]+_t[0-9]+$",
+          "description": "Deterministic table ID, e.g. p1_t0001."
+        },
+        "bbox": {
+          "$ref": "#/$defs/BBox"
+        },
+        "rows": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "cols": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "cells": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/TableCell"
+          }
+        }
+      }
+    },
+    "ImageItem": {
+      "type": "object",
+      "required": ["id", "bbox"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^p[0-9]+_img[0-9]+$"
+        },
+        "bbox": {
+          "$ref": "#/$defs/BBox"
+        },
+        "format": {
+          "type": "string"
+        }
+      }
+    },
+    "Page": {
+      "type": "object",
+      "required": ["page_number", "width", "height", "items"],
+      "properties": {
+        "page_number": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "1-indexed page number."
+        },
+        "width": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Page width in absolute coordinate points."
+        },
+        "height": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Page height in absolute coordinate points."
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/TextItem"
+          }
+        },
+        "blocks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Block"
+          },
+          "default": []
+        },
+        "tables": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Table"
+          },
+          "default": []
+        },
+        "images": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ImageItem"
+          },
+          "default": []
+        }
+      }
+    }
+  }
+}

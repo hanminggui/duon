@@ -1,0 +1,124 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://duon.ai/schemas/generic-output.v1.json",
+  "title": "GenericDocumentOutput",
+  "description": "Deterministic universal schema output when no specific domain schema is supplied.",
+  "type": "object",
+  "required": [
+    "document_type",
+    "title",
+    "facts",
+    "entities",
+    "dates",
+    "amounts"
+  ],
+  "properties": {
+    "document_type": {
+      "type": "string",
+      "description": "Inferred document category: e.g. purchase_order, contract, invoice, quote, receipt, resume, report, meeting_minutes, specification, other."
+    },
+    "title": {
+      "type": "string",
+      "description": "Primary document title or header summary."
+    },
+    "summary": {
+      "type": "string",
+      "description": "Brief executive abstract of the document."
+    },
+    "facts": {
+      "type": "array",
+      "description": "Key-value fact pairs detected across the document.",
+      "items": {
+        "type": "object",
+        "required": ["key", "value"],
+        "properties": {
+          "key": {
+            "type": "string",
+            "description": "Canonicalized field or attribute label."
+          },
+          "value": {
+            "description": "Associated value (string, number, or boolean)."
+          }
+        }
+      }
+    },
+    "entities": {
+      "type": "array",
+      "description": "Named entities recognized in the document.",
+      "items": {
+        "type": "object",
+        "required": ["text", "type"],
+        "properties": {
+          "text": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["organization", "person", "location", "product", "identifier", "other"]
+          }
+        }
+      }
+    },
+    "dates": {
+      "type": "array",
+      "description": "Chronological dates normalized to ISO-8601.",
+      "items": {
+        "type": "object",
+        "required": ["text", "type", "normalized"],
+        "properties": {
+          "text": {
+            "type": "string",
+            "description": "Original raw date expression in text."
+          },
+          "type": {
+            "type": "string",
+            "description": "Semantic role, e.g. signing_date, delivery_date, effective_date, due_date, order_date."
+          },
+          "normalized": {
+            "type": "string",
+            "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}(T[0-9]{2}:[0-9]{2}:[0-9]{2}(Z|[+-][0-9]{2}:[0-9]{2}))?$",
+            "description": "ISO-8601 formatted date (e.g. 2026-05-18)."
+          }
+        }
+      }
+    },
+    "amounts": {
+      "type": "array",
+      "description": "Monetary figures normalized.",
+      "items": {
+        "type": "object",
+        "required": ["text", "value", "currency"],
+        "properties": {
+          "text": {
+            "type": "string",
+            "description": "Raw string, e.g. 人民币 1600 元 税前."
+          },
+          "value": {
+            "type": "number",
+            "description": "Normalized numerical value."
+          },
+          "currency": {
+            "type": "string",
+            "description": "Standard ISO 4217 currency code (e.g. CNY, USD, EUR) or UNKNOWN."
+          },
+          "tax_included": {
+            "type": "boolean",
+            "description": "Whether tax is included in this amount if determinable."
+          }
+        }
+      }
+    },
+    "sections": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["heading", "content"],
+        "properties": {
+          "heading": { "type": "string" },
+          "content": { "type": "string" }
+        }
+      },
+      "default": []
+    }
+  }
+}

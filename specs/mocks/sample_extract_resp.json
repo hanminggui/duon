@@ -1,0 +1,57 @@
+{
+  "data": {
+    "party_a": "吾立方公司",
+    "party_b": "宋泽昊",
+    "amount": 1600,
+    "order_date": "2026-05-18"
+  },
+  "evidence": {
+    "/party_a": [
+      {
+        "page": 1,
+        "item_ids": ["p1_i0004"],
+        "quote": "吾立方公司",
+        "bbox": [112.00, 180.00, 185.00, 192.00],
+        "confidence": 0.99
+      }
+    ],
+    "/party_b": [
+      {
+        "page": 1,
+        "item_ids": ["p1_i0006"],
+        "quote": "宋泽昊",
+        "bbox": [102.00, 210.00, 145.00, 222.00],
+        "confidence": 0.99
+      }
+    ],
+    "/amount": [
+      {
+        "page": 1,
+        "item_ids": ["p1_i0008"],
+        "quote": "费用价格：总金额为人民币 1600 元 税前。",
+        "bbox": [50.00, 270.00, 290.00, 282.50],
+        "confidence": 0.99
+      }
+    ],
+    "/order_date": [
+      {
+        "page": 1,
+        "item_ids": ["p1_i0007"],
+        "quote": "下单时间：2026年05月18日",
+        "bbox": [50.00, 240.00, 210.00, 252.00],
+        "confidence": 0.97
+      }
+    ]
+  },
+  "validation": {
+    "is_valid": true,
+    "errors": []
+  },
+  "meta": {
+    "document_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "pipeline_version": "1.0.0",
+    "result_hash": "7f83b1657ff1fc53b92dc18148a1d65dfc2d4b1fa3d677284addd200126d9069",
+    "model": "Qwen3-8B",
+    "execution_time_ms": 1420
+  }
+}
