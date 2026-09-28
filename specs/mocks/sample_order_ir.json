@@ -1,0 +1,103 @@
+{
+  "document_id": "doc_e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "source": {
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "mime_type": "application/pdf",
+    "filename": "order_2026_GD030.pdf",
+    "size_bytes": 1048576
+  },
+  "parser": {
+    "name": "liteparse",
+    "version": "2.14.4",
+    "config_hash": "a1b2c3d4e5f6"
+  },
+  "pages": [
+    {
+      "page_number": 1,
+      "width": 595.32,
+      "height": 841.92,
+      "items": [
+        {
+          "id": "p1_i0001",
+          "type": "text",
+          "text": "委托制作采购订单",
+          "bbox": [210.50, 45.20, 385.00, 72.80],
+          "confidence": 0.99
+        },
+        {
+          "id": "p1_i0002",
+          "type": "text",
+          "text": "订单编号：2026-G-D-030",
+          "bbox": [388.63, 142.85, 521.90, 154.49],
+          "confidence": 0.98
+        },
+        {
+          "id": "p1_i0003",
+          "type": "text",
+          "text": "公司/部门：",
+          "bbox": [50.00, 180.00, 110.00, 192.00],
+          "confidence": 0.99
+        },
+        {
+          "id": "p1_i0004",
+          "type": "text",
+          "text": "吾立方公司",
+          "bbox": [112.00, 180.00, 185.00, 192.00],
+          "confidence": 0.99
+        },
+        {
+          "id": "p1_i0005",
+          "type": "text",
+          "text": "供应商：",
+          "bbox": [50.00, 210.00, 100.00, 222.00],
+          "confidence": 0.99
+        },
+        {
+          "id": "p1_i0006",
+          "type": "text",
+          "text": "宋泽昊",
+          "bbox": [102.00, 210.00, 145.00, 222.00],
+          "confidence": 0.99
+        },
+        {
+          "id": "p1_i0007",
+          "type": "text",
+          "text": "下单时间：2026年05月18日",
+          "bbox": [50.00, 240.00, 210.00, 252.00],
+          "confidence": 0.97
+        },
+        {
+          "id": "p1_i0008",
+          "type": "text",
+          "text": "费用价格：总金额为人民币 1600 元 税前。",
+          "bbox": [50.00, 270.00, 290.00, 282.50],
+          "confidence": 0.99
+        }
+      ],
+      "blocks": [
+        {
+          "id": "p1_b0001",
+          "type": "heading",
+          "text": "委托制作采购订单",
+          "bbox": [210.50, 45.20, 385.00, 72.80],
+          "item_ids": ["p1_i0001"]
+        },
+        {
+          "id": "p1_b0002",
+          "type": "paragraph",
+          "text": "订单编号：2026-G-D-030",
+          "bbox": [388.63, 142.85, 521.90, 154.49],
+          "item_ids": ["p1_i0002"]
+        },
+        {
+          "id": "p1_b0003",
+          "type": "paragraph",
+          "text": "费用价格：总金额为人民币 1600 元 税前。",
+          "bbox": [50.00, 270.00, 290.00, 282.50],
+          "item_ids": ["p1_i0008"]
+        }
+      ],
+      "tables": []
+    }
+  ]
+}

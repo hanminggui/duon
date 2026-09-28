@@ -1,0 +1,379 @@
+openapi: 3.1.0
+info:
+  title: Duon Document Intelligence Service API
+  version: 1.0.0
+  description: |
+    Production-grade Document Intelligence API providing high-precision parsing,
+    schema-driven semantic extraction, and structured data verification.
+    Supports both Synchronous and Asynchronous execution, ephemeral file uploads,
+    and customizable OpenAI-compatible LLM endpoints.
+
+servers:
+  - url: http://localhost:8080
+    description: Local development server
+
+paths:
+  /v1/parse:
+    post:
+      summary: Parse Document into Document IR
+      description: |
+        Parses a document (via URL or ephemeral upload) into the canonical Document IR.
+        Supports both synchronous returns (default) and asynchronous jobs.
+      parameters:
+        - in: query
+          name: async
+          schema:
+            type: boolean
+            default: false
+          description: When true, queues an asynchronous job and returns 202 Accepted.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ParseRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/MultipartParseRequest'
+          application/pdf:
+            schema:
+              type: string
+              format: binary
+              description: Raw PDF binary stream payload
+          application/octet-stream:
+            schema:
+              type: string
+              format: binary
+              description: Raw binary file stream payload
+
+      responses:
+        '200':
+          description: Synchronous parse success.
+          content:
+            application/json:
+              schema:
+                $ref: 'https://duon.ai/schemas/document-ir.v1.json'
+        '202':
+          description: Asynchronous job accepted.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobAcceptedResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+
+  /v1/extract:
+    post:
+      summary: "Layer 2: Extract Structured Data & Evidence from Document IR"
+      description: |
+        Pure semantic extraction layer. Accepts a pre-parsed Document IR and caller Schema (or Generic Mode).
+        Invokes LLM, validates output against schema, and binds physical coordinate evidence.
+        Strict single responsibility: does NOT parse PDF or download files.
+      parameters:
+        - in: query
+          name: async
+          schema:
+            type: boolean
+            default: false
+          description: When true, returns 202 Accepted with a job_id for background processing.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExtractRequest'
+      responses:
+        '200':
+          description: Extraction successful (Synchronous).
+          content:
+            application/json:
+              schema:
+                $ref: 'https://duon.ai/schemas/extract-response.v1.json'
+        '202':
+          description: Asynchronous job accepted.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobAcceptedResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+
+  /v1/verify:
+    post:
+      summary: "Layer 2: Verify Existing System Data against Document IR"
+      description: |
+        Pure semantic verification layer. Accepts pre-parsed Document IR and known system records,
+        detecting conflicts and returning exact coordinate evidence.
+        Strict single responsibility: does NOT parse PDF or download files.
+      parameters:
+        - in: query
+          name: async
+          schema:
+            type: boolean
+            default: false
+          description: When true, queues an asynchronous job and returns 202.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VerifyRequest'
+      responses:
+        '200':
+          description: Verification completed (Synchronous).
+          content:
+            application/json:
+              schema:
+                $ref: 'https://duon.ai/schemas/verify-contract.v1.json'
+        '202':
+          description: Asynchronous job accepted.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobAcceptedResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+
+  /v1/jobs/{job_id}:
+    get:
+      summary: Query Asynchronous Job Status
+      description: Retrieves the current status and (if completed) payload of a queued job.
+      parameters:
+        - in: path
+          name: job_id
+          required: true
+          schema:
+            type: string
+          description: Unique job tracking ID.
+      responses:
+        '200':
+          description: Job status report.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobStatusResponse'
+        '404':
+          description: Job not found.
+
+    delete:
+      summary: Cancel or Delete Job
+      description: Cancels an ongoing task or cleans up an expired job state.
+      parameters:
+        - in: path
+          name: job_id
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Job deleted/cancelled successfully.
+        '404':
+          description: Job not found.
+
+components:
+  schemas:
+    DocumentSourceInput:
+      type: object
+      description: Document source payload supporting URL, Base64 inline payload, or local file path.
+      properties:
+        url:
+          type: string
+          description: HTTP/HTTPS URL of document to fetch, or inline Data URI (data:application/pdf;base64,...).
+        base64:
+          type: string
+          description: Base64-encoded document binary.
+        path:
+          type: string
+          description: Local file system path for on-premise deployments or shared volume mounts.
+        headers:
+          type: object
+          additionalProperties:
+            type: string
+          description: Optional auth headers passed when downloading from remote source.
+
+    DocumentSourceUrl:
+      $ref: '#/components/schemas/DocumentSourceInput'
+
+    ModelConfig:
+      type: object
+      description: Per-request override of the LLM inference backend (OpenAI-compatible).
+      properties:
+        base_url:
+          type: string
+          format: uri
+          example: "http://localhost:8000/v1"
+          description: Custom OpenAI-compatible endpoint URL.
+        api_key:
+          type: string
+          format: password
+          description: Bearer API key if endpoint requires authentication.
+        model:
+          type: string
+          example: "Qwen3-8B"
+          description: Model identifier to request.
+        temperature:
+          type: number
+          default: 0.0
+          minimum: 0.0
+          maximum: 2.0
+          description: Sampling temperature. Defaults to 0 for determinism.
+        seed:
+          type: integer
+          default: 42
+          description: Fixed seed for reproducible generation.
+
+    ParseRequest:
+      type: object
+      description: Document parse request supporting document object or top-level shortcuts.
+      properties:
+        document:
+          $ref: '#/components/schemas/DocumentSourceInput'
+        url:
+          type: string
+          description: Top-level shortcut for document URL or Data URI.
+        base64:
+          type: string
+          description: Top-level shortcut for base64 encoded document content.
+        path:
+          type: string
+          description: Top-level shortcut for local file path.
+        ocr_enabled:
+          type: boolean
+          default: true
+        filename:
+          type: string
+          description: Optional filename hint.
+        callback_url:
+          type: string
+          format: uri
+          description: Webhook URL triggered upon async job completion.
+
+
+    ExtractRequest:
+      type: object
+      required: [document_ir]
+      properties:
+        document_ir:
+          $ref: 'https://duon.ai/schemas/document-ir.v1.json'
+          description: "Canonical Document IR produced by Layer 1 (/v1/parse). Strictly required."
+        schema:
+          type: object
+          description: JSON Schema defining expected output fields. If omitted, Generic Mode is applied.
+        model_config:
+          $ref: '#/components/schemas/ModelConfig'
+        callback_url:
+          type: string
+          format: uri
+
+    VerifyRequest:
+      type: object
+      required: [document_ir, data]
+      properties:
+        document_ir:
+          $ref: 'https://duon.ai/schemas/document-ir.v1.json'
+          description: "Canonical Document IR produced by Layer 1 (/v1/parse). Strictly required."
+        data:
+          type: object
+          description: Existing structured database values to verify against the document IR.
+        schema:
+          type: object
+          description: Optional schema constraining field types and descriptions.
+        model_config:
+          $ref: '#/components/schemas/ModelConfig'
+        callback_url:
+          type: string
+          format: uri
+
+    MultipartParseRequest:
+      type: object
+      required: [file]
+      properties:
+        file:
+          type: string
+          format: binary
+          description: "Document binary. Ephemeral lifecycle: deleted immediately after IR creation."
+        ocr_enabled:
+          type: boolean
+          default: true
+        callback_url:
+          type: string
+          format: uri
+
+    JobAcceptedResponse:
+      type: object
+      required: [job_id, status, status_url]
+      properties:
+        job_id:
+          type: string
+          example: "job_01h7v83k9b4e5f6g7h8j9k0l1m"
+        status:
+          type: string
+          enum: [pending, running]
+          example: "pending"
+        status_url:
+          type: string
+          example: "/v1/jobs/job_01h7v83k9b4e5f6g7h8j9k0l1m"
+        created_at:
+          type: string
+          format: date-time
+
+    JobStatusResponse:
+      type: object
+      required: [job_id, status, created_at, updated_at]
+      properties:
+        job_id:
+          type: string
+        status:
+          type: string
+          enum: [pending, running, completed, failed, cancelled]
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        result:
+          type: object
+          description: Result payload when status is completed. Matches endpoint return schema.
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+            details:
+              type: object
+
+    ErrorResponse:
+      type: object
+      required: [error_code, message]
+      properties:
+        error_code:
+          type: string
+          example: "SSRF_FORBIDDEN_HOST"
+        message:
+          type: string
+          example: "The requested document host resolves to a private IP address."
+        details:
+          type: object
+
+  responses:
+    BadRequest:
+      description: Invalid request parameters or malformed JSON.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    UnprocessableEntity:
+      description: Document could not be parsed, schema validation failed, or security rule triggered.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
